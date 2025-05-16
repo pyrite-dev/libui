@@ -116,6 +116,11 @@ void libui_machdep_process(libui_t* ui, libui_widget_t* w){
 	if(w->check_xywh){
 		Widget ctx = (Widget)w->context;
 		XtVaSetValues(ctx, XmNx, w->ui_x, XmNy, w->ui_y, XmNwidth, w->ui_width, XmNheight, w->ui_height, NULL);
+		if(w->type == LIBUI_OPENGL){
+			machdep_t* m = (machdep_t*)w->machdep;
+			GLwDrawingAreaMakeCurrent(ctx, m->gl);
+			glViewport(0, 0, w->width, w->height);
+		}
 	}
 }
 
@@ -147,15 +152,15 @@ void libui_loop(libui_t* ui){
 		XtDispatchEvent(&ev);
 		if(ev.type == ResizeRequest || ev.type == ConfigureNotify){
 			XtWidgetGeometry geo;
-			int trig = 0;
 			XtQueryGeometry(ui->machdep.top, NULL, &geo);
-			if(ui->x != geo.x || ui->y != geo.y || ui->width != geo.width || geo.height) trig = 1;
 			ui->x = geo.x;
 			ui->y = geo.y;
 			ui->width = geo.width;
 			ui->height = geo.height;
 
-			if(trig) libui_layout(ui);
+			if(ui->resize != NULL) ui->resize(ui, ui->width, ui->height);
+			libui_layout(ui);
+			libui_process(ui);
 		}
 		libui_process(ui);
 	}

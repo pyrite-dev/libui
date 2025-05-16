@@ -60,6 +60,7 @@ typedef struct libui_ libui_t;
 typedef struct libui_ {
 	libui_machdep_t machdep;
 	void(*draw)(libui_t*, libui_widget_t*);
+	void(*resize)(libui_t*, int width, int height);
 	int x;
 	int y;
 	int width;
@@ -84,6 +85,7 @@ LIBUIDEF void libui_geometry(libui_t* ui, int id, int* x, int* y, int* width, in
 LIBUIDEF int libui_get_index(libui_t* ui, int id);
 LIBUIDEF libui_widget_t* libui_new_widget(libui_t* ui);
 LIBUIDEF void libui_set_draw(libui_t* ui, void(*draw)(libui_t*, libui_widget_t*));
+LIBUIDEF void libui_set_resize(libui_t* ui, void(*resize)(libui_t*, int, int));
 
 #ifdef __cplusplus
 }

@@ -103,6 +103,10 @@ void libui_set_draw(libui_t* ui, void(*draw)(libui_t*, libui_widget_t*)){
 	ui->draw = draw;
 }
 
+void libui_set_resize(libui_t* ui, void(*resize)(libui_t*, int, int)){
+	ui->resize = resize;
+}
+
 void libui_destroy(libui_t* ui){
 	libui_machdep_destroy(ui);
 	free(ui);
@@ -137,6 +141,8 @@ libui_widget_t* libui_new_widget(libui_t* ui){
 	w->y = 0;
 	w->width = 0;
 	w->height = 0;
+
+	w->check_xywh = 0;
 
 	w->id = i;
 	arrput(ui->widgets, w);

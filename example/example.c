@@ -1,4 +1,8 @@
+#include <stdio.h>
+
 #include <libui.h>
+
+libui_widget_t* opengl;
 
 double deg = 0;
 void draw(libui_t* ui, libui_widget_t* w){
@@ -23,11 +27,16 @@ void draw(libui_t* ui, libui_widget_t* w){
 	deg += 360.0/60;
 }
 
+void resize(libui_t* ui, int width, int height){
+	opengl->width = opengl->height = height;
+}
+
 int main(){
 	libui_t* ui = libui_create("test", 0, 0, 400, 300);
 	libui_widget_t* w;
 
 	libui_set_draw(ui, draw);
+	libui_set_resize(ui, resize);
 
 	w = libui_new_widget(ui);
 	w->text = "Test";
@@ -47,6 +56,7 @@ int main(){
 	w->y = 0;
 	w->width = 300;
 	w->height = 300;
+	opengl = w;
 
 	libui_loop(ui);
 	libui_destroy(ui);

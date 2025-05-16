@@ -23,7 +23,9 @@ LRESULT CALLBACK libui_wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp){
 			ui->y = rect.top;
 			ui->width = rect.right - rect.left;
 			ui->height = rect.bottom - rect.top;
+			if(ui->resize != NULL) ui->resize(ui, ui->width, ui->height);
 			libui_layout(ui);
+			libui_process(ui);
 			break;
 		}
 		case WM_PAINT: {
@@ -113,6 +115,11 @@ void libui_machdep_process(libui_t* ui, libui_widget_t* w){
 
 	if(w->check_xywh){
 		SetWindowPos(w->context, NULL, w->ui_x, w->ui_y, w->ui_width, w->ui_height, 0);
+		if(w->type == LIBUI_OPENGL){
+			machdep_t* m = (machdep_t*)w->machdep;
+			wglMakeCurrent(m->dc, m->glrc);
+			glViewport(0, 0, w->width, w->height);
+		}
 	}
 }
 
@@ -131,7 +138,7 @@ void libui_loop(libui_t* ui){
 					machdep_t* m = (machdep_t*)ui->widgets[i]->machdep;
 					wglMakeCurrent(m->dc, m->glrc);
 					ui->draw(ui, ui->widgets[i]);
-					SwapBuffers(m->dc);
+					SwapBuffers(m->dc);	
 				}
 			}
 			continue;
