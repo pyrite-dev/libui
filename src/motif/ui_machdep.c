@@ -2,8 +2,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+
+#include <stb_ds.h>
 
 #include <Xm/MainW.h>
+#include <Xm/PushB.h>
 
 void libui_init(void){}
 
@@ -47,8 +51,31 @@ int libui_machdep_create(libui_t* ui, const char* title, int x, int y, int width
 	return 0;
 }
 
+void libui_machdep_process(libui_t* ui, libui_widget_t* w){
+	if(w->context == NULL){
+		if(w->type == LIBUI_BUTTON){
+			char buf[512];
+			sprintf(buf, "id%d", w->id);
+			w->context = (void*)XtVaCreateWidget(buf, xmPushButtonWidgetClass, ui->machdep.main, NULL);
+
+			XtManageChild((Widget)w->context);
+			XtUnmanageChild((Widget)w->context);
+			XtMapWidget((Widget)w->context);
+		}
+	}
+
+	if(w->check_xywh){
+		Widget ctx = (Widget)w->context;
+		XtVaSetValues(ctx, XmNx, w->ui_x, XmNy, w->ui_y, XmNwidth, w->ui_width, XmNheight, w->ui_height, NULL);
+	}
+}
+
 void libui_loop(libui_t* ui){
 	XEvent ev;
+
+	libui_layout(ui);
+	libui_process(ui);
+
 	while(1){
 		XtAppNextEvent(ui->machdep.context, &ev);
 		if(ev.type == ClientMessage && ev.xclient.data.l[0] == ui->machdep.wmdel){
@@ -67,9 +94,18 @@ void libui_loop(libui_t* ui){
 
 			if(trig) libui_layout(ui);
 		}
+		libui_process(ui);
 	}
 }
 
 void libui_machdep_destroy(libui_t* ui){
+	while(arrlen(ui->widgets) > 0){
+		if(ui->widgets[0]->context != NULL){
+			XtDestroyWidget((Widget)ui->widgets[0]->context);
+		}
+		free(ui->widgets[0]);
+		arrdel(ui->widgets, 0);
+	}
+	arrfree(ui->widgets);
 	XtDestroyWidget(ui->machdep.top);
 }
