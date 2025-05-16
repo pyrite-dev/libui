@@ -70,6 +70,29 @@ void libui_machdep_process(libui_t* ui, libui_widget_t* w){
 	if(w->context == NULL){
 		if(w->type == LIBUI_BUTTON){
 			w->context = CreateWindow("BUTTON", w->text == NULL ? "(not set)" : w->text, WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 0, 0, 0, 0, ui->machdep.window, NULL, ui->machdep.instance, NULL);
+		}else if(w->type == LIBUI_OPENGL){
+			PIXELFORMATDESCRIPTOR desc;
+			int fmt;
+			HDC dc;
+			HGLRC glrc;
+
+			memset(&desc, 0, sizeof(desc));
+			desc.nSize = sizeof(desc);
+			desc.nVersion = 1;
+			desc.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+			desc.iPixelType = PFD_TYPE_RGBA;
+			desc.cColorBits = 24;
+			desc.cAlphaBits = 8;
+			desc.cDepthBits = 32;
+
+			w->context = (void*)CreateWindow("OpenGL", "", WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0, 0, 0, ui->machdep.window, NULL, ui->machdep.instance, NULL);
+
+			dc = GetDC((HWND)w->context);
+
+			fmt = ChoosePixelFormat(dc, &desc);
+			SetPixelFormat(dc, fmt, &desc);
+
+			glrc = wglCreateContext(dc);
 		}
 	}
 

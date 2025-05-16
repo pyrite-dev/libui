@@ -8,6 +8,11 @@
 
 #include <Xm/MainW.h>
 #include <Xm/PushB.h>
+#ifdef GLAPI
+#undef GLAPI
+#endif
+#define GLAPI extern
+#include <GL/GLwDrawA.h>
 
 void libui_init(void){}
 
@@ -54,20 +59,32 @@ int libui_machdep_create(libui_t* ui, const char* title, int x, int y, int width
 }
 
 void libui_machdep_process(libui_t* ui, libui_widget_t* w){
+	int new_widget = 0;
+
 	if(w->context == NULL){
-		XftFont* font = XftFontOpenName(XtDisplay(ui->machdep.top), DefaultScreen(ui->machdep.top), "sans:size=12");
+		XftFont* font = XftFontOpenName(XtDisplay(ui->machdep.top), DefaultScreen(ui->machdep.top), "monospace:size=12");
 		Arg ft[2];
+		char buf[512];
+		XmString str = XmStringCreateLocalized(w->text == NULL ? "(not set)" : w->text);
+		sprintf(buf, "id%d", w->id);
 
 		if(w->type == LIBUI_BUTTON){
-			char buf[512];
-			XmString str = XmStringCreateLocalized(w->text == NULL ? "(not set)" : w->text);
-			sprintf(buf, "id%d", w->id);
 			w->context = (void*)XtVaCreateWidget(buf, xmPushButtonWidgetClass, ui->machdep.main, XmNlabelString, str, NULL);
-			XtManageChild((Widget)w->context);
-			XtUnmanageChild((Widget)w->context);
-			XtMapWidget((Widget)w->context);
-			XmStringFree(str);
+		}else if(w->type == LIBUI_OPENGL){
+			int attribs[2];
+			XVisualInfo* visinfo;
+
+			attribs[0] = GLX_RGBA;
+			attribs[1] = None;
+
+			visinfo = glXChooseVisual(XtDisplay(ui->machdep.top), DefaultScreen(XtDisplay(ui->machdep.top)), attribs);
+
+			w->context = (void*)XtVaCreateWidget(buf, glwDrawingAreaWidgetClass, ui->machdep.main, GLwNvisualInfo, visinfo, NULL);
 		}
+
+		new_widget = 1;
+
+		XmStringFree(str);
 
 		if(font != NULL){
 			XmRendition r;
@@ -78,6 +95,14 @@ void libui_machdep_process(libui_t* ui, libui_widget_t* w){
 			rt = XmRenderTableAddRenditions(NULL, &r, 1, XmMERGE_REPLACE);
 			XtVaSetValues((Widget)w->context, XmNrenderTable, rt, NULL);
 		}
+
+		XtVaSetValues((Widget)w->context, XmNx, w->ui_x, XmNy, w->ui_y, XmNwidth, w->ui_width, XmNheight, w->ui_height, NULL);
+	}
+
+	if(new_widget){
+		XtManageChild((Widget)w->context);
+		XtUnmanageChild((Widget)w->context);
+		XtMapWidget((Widget)w->context);
 	}
 
 	if(w->check_xywh){

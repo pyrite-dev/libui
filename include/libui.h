@@ -3,6 +3,8 @@
 
 #include <libui_machdep.h>
 
+#include <GL/gl.h>
+
 #define LIBUIDEF extern
 
 #ifdef __cplusplus
@@ -10,7 +12,8 @@ extern "C" {
 #endif
 
 enum LIBUI_WIDGET_TYPE {
-	LIBUI_BUTTON = 0
+	LIBUI_BUTTON = 0,
+	LIBUI_OPENGL
 };
 
 enum LIBUI_ORIGIN {

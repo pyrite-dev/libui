@@ -64,14 +64,17 @@ function ui_flags(x)
 	if not(x) then
 		if _OPTIONS["ui-backend"] == "motif" then
 			links({
-				"X11",
 				"Xft",
+				"GLw",
+				"GL",
 				"Xm",
-				"Xt"
+				"Xt",
+				"X11"
 			})
 		elseif _OPTIONS["ui-backend"] == "win32" then
 			links({
-				"gdi32"
+				"gdi32",
+				"opengl32"
 			})
 		end
 	end
