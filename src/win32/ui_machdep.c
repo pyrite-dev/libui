@@ -16,6 +16,7 @@ LRESULT CALLBACK libui_wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp){
 			ui->y = rect.top;
 			ui->width = rect.right - rect.left;
 			ui->height = rect.bottom - rect.top;
+			libui_layout(ui);
 			break;
 		}
 		default: {
@@ -39,7 +40,7 @@ int libui_machdep_create(libui_t* ui, const char* title, int x, int y, int width
 	wc.cbWndExtra = 0;
 	wc.hInstance = ui->machdep.instance;
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = GetSysColorBrush(COLOR_MENU);
+	wc.hbrBackground = CreateSolidBrush(RGB(0x80, 0x80, 0x80));
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = title;
 	wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
@@ -65,13 +66,30 @@ int libui_machdep_create(libui_t* ui, const char* title, int x, int y, int width
 	return 0;
 }
 
+void libui_machdep_process(libui_t* ui, libui_widget_t* w){
+	if(w->context == NULL){
+		if(w->type == LIBUI_BUTTON){
+			w->context = CreateWindow("BUTTON", w->text == NULL ? "(not set)" : w->text, WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 0, 0, 0, 0, ui->machdep.window, NULL, ui->machdep.instance, NULL);
+		}
+	}
+
+	if(w->check_xywh){
+		SetWindowPos(w->context, NULL, w->ui_x, w->ui_y, w->ui_width, w->ui_height, 0);
+	}
+}
+
 void libui_loop(libui_t* ui){
 	MSG msg;
 	int ret;
+
+	libui_layout(ui);
+	libui_process(ui);
+
 	while((ret = GetMessage(&msg, ui->machdep.window, 0, 0)) != 0){
 		if(ret == -1) break;
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
+		libui_process(ui);
 	}
 }
 

@@ -5,9 +5,12 @@ int main(){
 	libui_widget_t* w;
 
 	w = libui_new_widget(ui);
+	w->text = "Test button";
 	w->type = LIBUI_BUTTON;
-	w->x = 50;
-	w->y = 50;
+	w->origin_x = LIBUI_RIGHT;
+	w->origin_y = LIBUI_BOTTOM;
+	w->x = 0;
+	w->y = 0;
 	w->width = 100;
 	w->height = 100;
 

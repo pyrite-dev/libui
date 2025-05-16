@@ -13,6 +13,13 @@ enum LIBUI_WIDGET_TYPE {
 	LIBUI_BUTTON = 0
 };
 
+enum LIBUI_ORIGIN {
+	LIBUI_LEFT = 0,
+	LIBUI_RIGHT,
+	LIBUI_TOP,
+	LIBUI_BOTTOM
+};
+
 typedef struct libui_widget_ {
 	void* context;
 	int id;
@@ -26,6 +33,9 @@ typedef struct libui_widget_ {
 	int old_width;
 	int old_height;
 
+	int origin_x;
+	int origin_y;
+
 	int x;
 	int y;
 	int width;
@@ -37,6 +47,8 @@ typedef struct libui_widget_ {
 	int ui_height;
 
 	int type;
+
+	char* text;
 } libui_widget_t;
 
 #if defined(LIBUI_SOURCE)

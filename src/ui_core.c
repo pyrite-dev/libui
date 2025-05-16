@@ -8,6 +8,9 @@
 void libui_geometry(libui_t* ui, int id, int* x, int* y, int* width, int* height){
 	int ind = libui_get_index(ui, id);
 	int p;
+	int first = 1;
+	int mulx = 1;
+	int muly = 1;
 
 	*x = 0;
 	*y = 0;
@@ -20,6 +23,9 @@ void libui_geometry(libui_t* ui, int id, int* x, int* y, int* width, int* height
 		return;
 	}
 
+	mulx = ui->widgets[ind]->origin_x == LIBUI_LEFT ? 1 : -1;
+	muly = ui->widgets[ind]->origin_y == LIBUI_TOP ? 1 : -1;
+
 	p = ui->widgets[ind]->parent;
 	do{
 		int x2;
@@ -28,6 +34,17 @@ void libui_geometry(libui_t* ui, int id, int* x, int* y, int* width, int* height
 		int h2;
 		int ind2;
 		libui_geometry(ui, p, &x2, &y2, &w2, &h2);
+		if(first){
+			first = 0;
+			if(mulx == -1){
+				*x += w2;
+				*x -= ui->widgets[ind]->width;
+			}
+			if(muly == -1){
+				*y += h2;
+				*y -= ui->widgets[ind]->height;
+			}
+		}
 		*x += x2;
 		*y += y2;
 		
@@ -35,8 +52,8 @@ void libui_geometry(libui_t* ui, int id, int* x, int* y, int* width, int* height
 		if(ind2 != -1) p = ui->widgets[ind2]->parent;
 	}while(p != 0);
 
-	*x += ui->widgets[ind]->x;
-	*y += ui->widgets[ind]->y;
+	*x += mulx * ui->widgets[ind]->x;
+	*y += muly * ui->widgets[ind]->y;
 	*width = ui->widgets[ind]->width;
 	*height = ui->widgets[ind]->height;
 }
@@ -107,6 +124,9 @@ libui_widget_t* libui_new_widget(libui_t* ui){
 	w->old_y = -1;
 	w->old_width = -1;
 	w->old_height = -1;
+
+	w->origin_x = LIBUI_LEFT;
+	w->origin_y = LIBUI_TOP;
 	
 	w->x = 0;
 	w->y = 0;
@@ -127,15 +147,15 @@ void libui_process(libui_t* ui){
 
 		w->check_xywh = 0;
 
-		if(w->old_x != w->x || w->old_y != w->y || w->old_width != w->width || w->old_height != w->height){
+		if(w->old_x != w->ui_x || w->old_y != w->ui_y || w->old_width != w->ui_width || w->old_height != w->ui_height){
 			w->check_xywh = 1;
 		}
 
 		libui_machdep_process(ui, w);
 
-		w->old_x = w->x;
-		w->old_y = w->y;
-		w->old_width = w->width;
-		w->old_height = w->height;
+		w->old_x = w->ui_x;
+		w->old_y = w->ui_y;
+		w->old_width = w->ui_width;
+		w->old_height = w->ui_height;
 	}
 }

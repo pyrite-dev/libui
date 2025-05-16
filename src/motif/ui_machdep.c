@@ -33,7 +33,9 @@ int libui_machdep_create(libui_t* ui, const char* title, int x, int y, int width
 		return -1;
 	}
 
-	ui->machdep.main = XtVaCreateManagedWidget("main", xmMainWindowWidgetClass, ui->machdep.top, NULL);
+	ui->machdep.main = XtVaCreateManagedWidget("main", xmMainWindowWidgetClass, ui->machdep.top,
+			XmNbackground, 0x808080,
+	NULL);
 
 	XtMoveWidget(ui->machdep.top, x, y);
 	XtResizeWidget(ui->machdep.top, width, height, 1);
@@ -55,12 +57,14 @@ void libui_machdep_process(libui_t* ui, libui_widget_t* w){
 	if(w->context == NULL){
 		if(w->type == LIBUI_BUTTON){
 			char buf[512];
+			XmString str = XmStringCreateLocalized(w->text == NULL ? "(not set)" : w->text);
 			sprintf(buf, "id%d", w->id);
-			w->context = (void*)XtVaCreateWidget(buf, xmPushButtonWidgetClass, ui->machdep.main, NULL);
+			w->context = (void*)XtVaCreateWidget(buf, xmPushButtonWidgetClass, ui->machdep.main, XmNlabelString, str, NULL);
 
 			XtManageChild((Widget)w->context);
 			XtUnmanageChild((Widget)w->context);
 			XtMapWidget((Widget)w->context);
+			XmStringFree(str);
 		}
 	}
 

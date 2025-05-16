@@ -65,6 +65,10 @@ function ui_flags(x)
 				"Xm",
 				"Xt"
 			})
+		elseif _OPTIONS["ui-backend"] == "win32" then
+			links({
+				"gdi32"
+			})
 		end
 	end
 end
