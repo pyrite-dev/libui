@@ -127,6 +127,8 @@ void libui_loop(libui_t* ui){
 	MSG msg;
 	int ret;
 
+	if(ui->resize != NULL) ui->resize(ui, ui->width, ui->height);
+
 	libui_layout(ui);
 	libui_process(ui);
 

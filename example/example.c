@@ -3,6 +3,7 @@
 #include <libui.h>
 
 libui_widget_t* opengl;
+libui_widget_t* btn;
 
 double deg = 0;
 void draw(libui_t* ui, libui_widget_t* w){
@@ -28,11 +29,16 @@ void draw(libui_t* ui, libui_widget_t* w){
 }
 
 void resize(libui_t* ui, int width, int height){
-	opengl->width = opengl->height = height;
+	btn->width = 75;
+	btn->height = 25;
+	btn->x = width / 2 - btn->width / 2;
+
+	opengl->width = opengl->height = (width > (height - btn->height - 15)) ? (height - btn->height - 15) : (width);
+	opengl->x = width / 2 - opengl->width / 2;
 }
 
 int main(){
-	libui_t* ui = libui_create("test", 0, 0, 400, 300);
+	libui_t* ui = libui_create("test", 0, 0, 400, 400);
 	libui_widget_t* w;
 
 	libui_set_draw(ui, draw);
@@ -41,21 +47,14 @@ int main(){
 	w = libui_new_widget(ui);
 	w->text = "Test";
 	w->type = LIBUI_BUTTON;
-	w->origin_x = LIBUI_RIGHT;
+	w->origin_x = LIBUI_LEFT;
 	w->origin_y = LIBUI_BOTTOM;
-	w->x = 0;
-	w->y = 0;
-	w->width = 75;
-	w->height = 25;
+	btn = w;
 
 	w = libui_new_widget(ui);
 	w->type = LIBUI_OPENGL;
 	w->origin_x = LIBUI_LEFT;
 	w->origin_y = LIBUI_TOP;
-	w->x = 0;
-	w->y = 0;
-	w->width = 300;
-	w->height = 300;
 	opengl = w;
 
 	libui_loop(ui);

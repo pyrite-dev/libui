@@ -127,6 +127,8 @@ void libui_machdep_process(libui_t* ui, libui_widget_t* w){
 void libui_loop(libui_t* ui){
 	XEvent ev;
 
+	if(ui->resize != NULL) ui->resize(ui, ui->width, ui->height);
+
 	libui_layout(ui);
 	libui_process(ui);
 
