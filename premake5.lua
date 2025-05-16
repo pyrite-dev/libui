@@ -10,7 +10,7 @@ newoption({
 	default = "motif"
 })
 
-function ui_flags()
+function ui_flags(x)
 	filter({
 		"platforms:Native",
 		"system:not windows"
@@ -57,14 +57,25 @@ function ui_flags()
 			"-Wl,-R/usr/pkg/lib"
 		})
 	filter({})
+
+	if not(x) then
+		if _OPTIONS["ui-backend"] == "motif" then
+			links({
+				"X11",
+				"Xm",
+				"Xt"
+			})
+		end
+	end
 end
 
 project("ui")
 	kind("StaticLib")
 	targetdir("lib/%{cfg.buildcfg}/%{cfg.platform}")
 	includedirs("include")
+	defines("LIBUI_SOURCE")
 
-	ui_flags()
+	ui_flags(1)
 
 	files("src/*.c")
 	files("src/" .. _OPTIONS["ui-backend"] .. "/*.c")

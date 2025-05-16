@@ -9,12 +9,17 @@
 extern "C" {
 #endif
 
+#if defined(LIBUI_SOURCE)
 typedef struct libui_ {
 	libui_machdep_t machdep;
 } libui_t;
+#else
+typedef void libui_t;
+#endif
 
 LIBUIDEF void libui_init(void);
-LIBUIDEF libui_t* libui_create(const char* title, int x, int y);
+LIBUIDEF libui_t* libui_create(const char* title, int x, int y, int width, int height);
+LIBUIDEF void libui_loop(libui_t* ui);
 LIBUIDEF void libui_destroy(libui_t* ui);
 
 #ifdef __cplusplus
