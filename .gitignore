@@ -3,3 +3,4 @@ lib
 obj
 *.make
 Makefile
+/include/libui_config.h
