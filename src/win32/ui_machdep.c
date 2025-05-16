@@ -6,13 +6,29 @@
 void libui_init(void){}
 
 LRESULT CALLBACK libui_wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp){
-	return DefWindowProc(wnd, msg, wp, lp);
+	libui_t* ui = (libui_t*)GetWindowLongPtr(wnd, GWLP_USERDATA);
+
+	switch(msg){
+		case WM_SIZE: {
+			RECT rect;
+			GetClientRect(wnd, &rect);
+			ui->x = rect.left;
+			ui->y = rect.top;
+			ui->width = rect.right - rect.left;
+			ui->height = rect.bottom - rect.top;
+			break;
+		}
+		default: {
+			return DefWindowProc(wnd, msg, wp, lp);
+		}
+	}
+	return 0;
 }
 
-libui_t* libui_create(const char* title, int x, int y, int width, int height){
+int libui_machdep_create(libui_t* ui, const char* title, int x, int y, int width, int height){
 	WNDCLASSEX wc;
-	libui_t* ui = malloc(sizeof(*ui));
-	memset(ui, 0, sizeof(*ui));
+	RECT rect;
+	DWORD style;
 
 	ui->machdep.instance = (HINSTANCE)GetModuleHandle(NULL);
 
@@ -29,20 +45,24 @@ libui_t* libui_create(const char* title, int x, int y, int width, int height){
 	wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
 	wc.hIconSm = LoadIcon(NULL, IDI_WINLOGO);
 	if(!RegisterClassEx(&wc)){
-		free(ui);
-		return NULL;
+		return -1;
 	}
 
 	ui->machdep.window = CreateWindow(title, title, WS_OVERLAPPEDWINDOW, x, y, width, height, NULL, 0, ui->machdep.instance, NULL);
 	if(ui->machdep.window == NULL){
-		free(ui);
-		return NULL;
+		return -1;
 	}
+	SetWindowLongPtr(ui->machdep.window, GWLP_USERDATA, (LONG_PTR)ui);
+
+	SetRect(&rect, 0, 0, width, height);
+	style = (DWORD)GetWindowLongPtr(ui->machdep.window, GWL_STYLE);
+	AdjustWindowRect(&rect, style, FALSE);
+	SetWindowPos(ui->machdep.window, NULL, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOMOVE);
 
 	ShowWindow(ui->machdep.window, SW_NORMAL);
 	UpdateWindow(ui->machdep.window);
 
-	return ui;
+	return 0;
 }
 
 void libui_loop(libui_t* ui){
@@ -55,7 +75,6 @@ void libui_loop(libui_t* ui){
 	}
 }
 
-void libui_destroy(libui_t* ui){
+void libui_machdep_destroy(libui_t* ui){
 	DestroyWindow(ui->machdep.window);
-	free(ui);
 }
