@@ -25,3 +25,10 @@ filter("platforms:Win64")
 filter({})
 
 include(".")
+
+project("example")
+	kind("ConsoleApp")
+	files("example/example.c")
+	links("ui")
+	includedirs("include")
+	ui_flags()
