@@ -89,6 +89,7 @@ libui_t* libui_create(const char* title, int x, int y, int width, int height){
 	memset(ui, 0, sizeof(*ui));
 
 	ui->widgets = NULL;
+	ui->draw = NULL;
 
 	if(libui_machdep_create(ui, title, x, y, width, height) < 0){
 		free(ui);
@@ -96,6 +97,10 @@ libui_t* libui_create(const char* title, int x, int y, int width, int height){
 	}
 
 	return ui;
+}
+
+void libui_set_draw(libui_t* ui, void(*draw)(libui_t*, libui_widget_t*)){
+	ui->draw = draw;
 }
 
 void libui_destroy(libui_t* ui){

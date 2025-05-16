@@ -3,7 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <stb_ds.h>
+
 void libui_init(void){}
+
+typedef struct machdep_ {
+	HDC dc;
+	HGLRC glrc;
+} machdep_t;
 
 LRESULT CALLBACK libui_wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp){
 	libui_t* ui = (libui_t*)GetWindowLongPtr(wnd, GWLP_USERDATA);
@@ -17,6 +24,12 @@ LRESULT CALLBACK libui_wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp){
 			ui->width = rect.right - rect.left;
 			ui->height = rect.bottom - rect.top;
 			libui_layout(ui);
+			break;
+		}
+		case WM_PAINT: {
+			PAINTSTRUCT ps;
+			HDC hdc = BeginPaint(wnd, &ps);
+			EndPaint(wnd, &ps);
 			break;
 		}
 		default: {
@@ -73,8 +86,7 @@ void libui_machdep_process(libui_t* ui, libui_widget_t* w){
 		}else if(w->type == LIBUI_OPENGL){
 			PIXELFORMATDESCRIPTOR desc;
 			int fmt;
-			HDC dc;
-			HGLRC glrc;
+			machdep_t* m;
 
 			memset(&desc, 0, sizeof(desc));
 			desc.nSize = sizeof(desc);
@@ -85,14 +97,17 @@ void libui_machdep_process(libui_t* ui, libui_widget_t* w){
 			desc.cAlphaBits = 8;
 			desc.cDepthBits = 32;
 
-			w->context = (void*)CreateWindow("OpenGL", "", WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0, 0, 0, ui->machdep.window, NULL, ui->machdep.instance, NULL);
+			w->context = (void*)CreateWindow("Static", "", WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0, 0, 0, ui->machdep.window, NULL, ui->machdep.instance, NULL);
 
-			dc = GetDC((HWND)w->context);
+			w->machdep = malloc(sizeof(machdep_t));
+			m = (machdep_t*)w->machdep;
 
-			fmt = ChoosePixelFormat(dc, &desc);
-			SetPixelFormat(dc, fmt, &desc);
+			m->dc = GetDC((HWND)w->context);
 
-			glrc = wglCreateContext(dc);
+			fmt = ChoosePixelFormat(m->dc, &desc);
+			SetPixelFormat(m->dc, fmt, &desc);
+
+			m->glrc = wglCreateContext(m->dc);
 		}
 	}
 
@@ -108,8 +123,21 @@ void libui_loop(libui_t* ui){
 	libui_layout(ui);
 	libui_process(ui);
 
-	while((ret = GetMessage(&msg, ui->machdep.window, 0, 0)) != 0){
-		if(ret == -1) break;
+	while((ret = PeekMessage(&msg, ui->machdep.window, 0, 0, PM_NOREMOVE)) != -1){
+		if(!ret && ui->draw != NULL){
+			int i;
+			for(i = 0; i < arrlen(ui->widgets); i++){
+				if(ui->widgets[i]->type == LIBUI_OPENGL){
+					machdep_t* m = (machdep_t*)ui->widgets[i]->machdep;
+					wglMakeCurrent(m->dc, m->glrc);
+					ui->draw(ui, ui->widgets[i]);
+					SwapBuffers(m->dc);
+				}
+			}
+			continue;
+		}
+		
+		if(GetMessage(&msg, ui->machdep.window, 0, 0) == -1) break;
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 		libui_process(ui);
@@ -117,5 +145,22 @@ void libui_loop(libui_t* ui){
 }
 
 void libui_machdep_destroy(libui_t* ui){
+	while(arrlen(ui->widgets) > 0){
+		if(ui->widgets[0]->machdep != NULL){
+			if(ui->widgets[0]->type == LIBUI_OPENGL){
+				machdep_t* m = (machdep_t*)ui->widgets[0]->machdep;
+				wglMakeCurrent(NULL, NULL);
+				DeleteDC(m->dc);
+				wglDeleteContext(m->glrc);
+			}
+			free(ui->widgets[0]->machdep);
+		}
+		if(ui->widgets[0]->context != NULL){
+			DestroyWindow((HWND)ui->widgets[0]->context);
+		}
+		free(ui->widgets[0]);
+		arrdel(ui->widgets, 0);
+	}
+	arrfree(ui->widgets);
 	DestroyWindow(ui->machdep.window);
 }

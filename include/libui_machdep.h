@@ -20,6 +20,7 @@ typedef struct libui_machdep_ {
 	Widget top;
 	Widget main;
 	Atom wmdel;
+	XVisualInfo* visual;
 } libui_machdep_t;
 #elif defined(LIBUI_WIN32)
 #include <windows.h>

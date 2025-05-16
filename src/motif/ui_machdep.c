@@ -14,10 +14,15 @@
 #define GLAPI extern
 #include <GL/GLwDrawA.h>
 
+typedef struct machdep_ {
+	GLXContext gl;
+} machdep_t;
+
 void libui_init(void){}
 
 int libui_machdep_create(libui_t* ui, const char* title, int x, int y, int width, int height){
 	int argc = 1;
+	int attribs[3];
 	char** argv = malloc(sizeof(*argv) * 2);
 
 	argv[0] = malloc(6);
@@ -55,6 +60,12 @@ int libui_machdep_create(libui_t* ui, const char* title, int x, int y, int width
 	ui->width = width;
 	ui->height = height;
 
+	attribs[0] = GLX_RGBA;
+	attribs[1] = GLX_DOUBLEBUFFER;
+	attribs[2] = None;
+
+	ui->machdep.visual = glXChooseVisual(XtDisplay(ui->machdep.top), DefaultScreen(XtDisplay(ui->machdep.top)), attribs);
+
 	return 0;
 }
 
@@ -71,15 +82,12 @@ void libui_machdep_process(libui_t* ui, libui_widget_t* w){
 		if(w->type == LIBUI_BUTTON){
 			w->context = (void*)XtVaCreateWidget(buf, xmPushButtonWidgetClass, ui->machdep.main, XmNlabelString, str, NULL);
 		}else if(w->type == LIBUI_OPENGL){
-			int attribs[2];
-			XVisualInfo* visinfo;
+			w->machdep = malloc(sizeof(machdep_t));
+			machdep_t* m = (machdep_t*)w->machdep;
 
-			attribs[0] = GLX_RGBA;
-			attribs[1] = None;
+			m->gl = glXCreateContext(XtDisplay(ui->machdep.top), ui->machdep.visual, 0, GL_TRUE);
 
-			visinfo = glXChooseVisual(XtDisplay(ui->machdep.top), DefaultScreen(XtDisplay(ui->machdep.top)), attribs);
-
-			w->context = (void*)XtVaCreateWidget(buf, glwDrawingAreaWidgetClass, ui->machdep.main, GLwNvisualInfo, visinfo, NULL);
+			w->context = (void*)XtVaCreateWidget(buf, glwDrawingAreaWidgetClass, ui->machdep.main, GLwNvisualInfo, ui->machdep.visual, NULL);
 		}
 
 		new_widget = 1;
@@ -118,6 +126,20 @@ void libui_loop(libui_t* ui){
 	libui_process(ui);
 
 	while(1){
+		if(!XPending(XtDisplay(ui->machdep.top))){
+			if(ui->draw != NULL){
+				int i;
+				for(i = 0; i < arrlen(ui->widgets); i++){
+					if(ui->widgets[i]->type == LIBUI_OPENGL){
+						machdep_t* m = (machdep_t*)ui->widgets[i]->machdep;
+						GLwDrawingAreaMakeCurrent((Widget)ui->widgets[i]->context, m->gl);
+						ui->draw(ui, ui->widgets[i]);
+						GLwDrawingAreaSwapBuffers((Widget)ui->widgets[i]->context);
+					}
+				}
+			}
+			continue;
+		}
 		XtAppNextEvent(ui->machdep.context, &ev);
 		if(ev.type == ClientMessage && ev.xclient.data.l[0] == ui->machdep.wmdel){
 			continue;
@@ -141,6 +163,13 @@ void libui_loop(libui_t* ui){
 
 void libui_machdep_destroy(libui_t* ui){
 	while(arrlen(ui->widgets) > 0){
+		if(ui->widgets[0]->machdep != NULL){
+			if(ui->widgets[0]->type == LIBUI_OPENGL){
+				machdep_t* m = (machdep_t*)ui->widgets[0]->machdep;
+				glXDestroyContext(XtDisplay(ui->machdep.top), m->gl);
+			}
+			free(ui->widgets[0]->machdep);
+		}
 		if(ui->widgets[0]->context != NULL){
 			XtDestroyWidget((Widget)ui->widgets[0]->context);
 		}

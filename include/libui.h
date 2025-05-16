@@ -25,6 +25,7 @@ enum LIBUI_ORIGIN {
 
 typedef struct libui_widget_ {
 	void* context;
+	void* machdep;
 	int id;
 
 	int parent;
@@ -55,8 +56,10 @@ typedef struct libui_widget_ {
 } libui_widget_t;
 
 #if defined(LIBUI_SOURCE)
+typedef struct libui_ libui_t;
 typedef struct libui_ {
 	libui_machdep_t machdep;
+	void(*draw)(libui_t*, libui_widget_t*);
 	int x;
 	int y;
 	int width;
@@ -80,6 +83,7 @@ LIBUIDEF void libui_layout(libui_t* ui);
 LIBUIDEF void libui_geometry(libui_t* ui, int id, int* x, int* y, int* width, int* height);
 LIBUIDEF int libui_get_index(libui_t* ui, int id);
 LIBUIDEF libui_widget_t* libui_new_widget(libui_t* ui);
+LIBUIDEF void libui_set_draw(libui_t* ui, void(*draw)(libui_t*, libui_widget_t*));
 
 #ifdef __cplusplus
 }
