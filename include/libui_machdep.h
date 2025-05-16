@@ -18,6 +18,7 @@ typedef struct libui_machdep_ {
 	XtAppContext context;
 	Widget top;
 	Widget main;
+	Atom wmdel;
 } libui_machdep_t;
 #elif defined(LIBUI_WIN32)
 #include <windows.h>

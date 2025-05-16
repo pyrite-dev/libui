@@ -40,6 +40,10 @@ libui_t* libui_create(const char* title, int x, int y, int width, int height){
 
 	XtRealizeWidget(ui->machdep.top);
 
+	ui->machdep.wmdel = XInternAtom(XtDisplay(ui->machdep.top), "WM_DELETE_WINDOW", False);
+	XSetWMProtocols(XtDisplay(ui->machdep.top), XtWindow(ui->machdep.top), &ui->machdep.wmdel, 1);
+
+
 	return ui;
 }
 
@@ -47,6 +51,9 @@ void libui_loop(libui_t* ui){
 	XEvent ev;
 	while(1){
 		XtAppNextEvent(ui->machdep.context, &ev);
+		if(ev.type == ClientMessage && ev.xclient.data.l[0] == ui->machdep.wmdel){
+			continue;
+		}
 		XtDispatchEvent(&ev);
 	}
 }
