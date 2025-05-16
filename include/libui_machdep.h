@@ -20,7 +20,11 @@ typedef struct libui_machdep_ {
 	Widget main;
 } libui_machdep_t;
 #elif defined(LIBUI_WIN32)
+#include <windows.h>
+
 typedef struct libui_machdep_ {
+	HINSTANCE instance;
+	HWND window;
 } libui_machdep_t;
 #endif
 #else
