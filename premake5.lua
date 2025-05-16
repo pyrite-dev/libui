@@ -19,7 +19,10 @@ function ui_flags(x)
 			"/usr/local/include",
 			"/usr/X11R6/include",
 			"/usr/X11R7/include",
-			"/usr/X11/include"
+			"/usr/X11/include",
+			"/usr/X11R6/include/freetype2",
+			"/usr/X11R7/include/freetype2",
+			"/usr/X11/include/freetype2"
 		})
 		libdirs({
 			"/usr/local/lib",
@@ -62,6 +65,7 @@ function ui_flags(x)
 		if _OPTIONS["ui-backend"] == "motif" then
 			links({
 				"X11",
+				"Xft",
 				"Xm",
 				"Xt"
 			})

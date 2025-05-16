@@ -34,7 +34,7 @@ int libui_machdep_create(libui_t* ui, const char* title, int x, int y, int width
 	}
 
 	ui->machdep.main = XtVaCreateManagedWidget("main", xmMainWindowWidgetClass, ui->machdep.top,
-			XmNbackground, 0x808080,
+		XmNbackground, 0x808080,
 	NULL);
 
 	XtMoveWidget(ui->machdep.top, x, y);
@@ -55,16 +55,28 @@ int libui_machdep_create(libui_t* ui, const char* title, int x, int y, int width
 
 void libui_machdep_process(libui_t* ui, libui_widget_t* w){
 	if(w->context == NULL){
+		XftFont* font = XftFontOpenName(XtDisplay(ui->machdep.top), DefaultScreen(ui->machdep.top), "sans:size=12");
+		Arg ft[2];
+
 		if(w->type == LIBUI_BUTTON){
 			char buf[512];
 			XmString str = XmStringCreateLocalized(w->text == NULL ? "(not set)" : w->text);
 			sprintf(buf, "id%d", w->id);
 			w->context = (void*)XtVaCreateWidget(buf, xmPushButtonWidgetClass, ui->machdep.main, XmNlabelString, str, NULL);
-
 			XtManageChild((Widget)w->context);
 			XtUnmanageChild((Widget)w->context);
 			XtMapWidget((Widget)w->context);
 			XmStringFree(str);
+		}
+
+		if(font != NULL){
+			XmRendition r;
+			XmRenderTable rt;
+			XtSetArg(ft[0], XmNfontType, XmFONT_IS_XFT);
+			XtSetArg(ft[1], XmNxftFont, font);
+			r = XmRenditionCreate((Widget)w->context, XmFONTLIST_DEFAULT_TAG, ft, 2);
+			rt = XmRenderTableAddRenditions(NULL, &r, 1, XmMERGE_REPLACE);
+			XtVaSetValues((Widget)w->context, XmNrenderTable, rt, NULL);
 		}
 	}
 

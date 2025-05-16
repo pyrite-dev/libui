@@ -12,6 +12,7 @@ extern "C" {
 #include <X11/Intrinsic.h>
 #include <X11/IntrinsicP.h>
 #include <X11/Shell.h>
+#include <X11/Xft/Xft.h>
 #include <Xm/Xm.h>
 
 typedef struct libui_machdep_ {
